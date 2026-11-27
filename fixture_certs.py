@@ -1,5 +1,6 @@
 """生成仅用于本地演练的证书，不保存共享私钥。"""
 import argparse
+import json
 from pathlib import Path
 import subprocess
 
@@ -32,6 +33,16 @@ def build_group(directory, group, clients):
         (folder / f"{label}.csr").unlink()
     for intermediate in ("ca.key", "ca.srl", client_ext.name, server_ext.name):
         (folder / intermediate).unlink()
+    # 信任清单：该接入域信任根下可用的真实 TLS 客户端身份
+    manifest = {
+        "domain": group,
+        "ca": "ca.crt",
+        "client_labels": list(clients),
+        "server_label": "localhost",
+    }
+    (folder / "trust.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
 
 def main():
